@@ -170,7 +170,9 @@ app.get('/macros/:macro.json', function (req, res) {
 
 // Send :remote/:command one time
 app.post('/remotes/:remote/:command', function (req, res) {
-  lircNode.irsend.send_once(req.params.remote, req.params.command, function () {});
+  for (i=0; i<3; i++) {
+    lircNode.irsend.send_once(req.params.remote, req.params.command, function () {});
+  }
   res.setHeader('Cache-Control', 'no-cache');
   res.sendStatus(200);
 });
