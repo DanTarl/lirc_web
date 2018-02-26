@@ -34,6 +34,9 @@ var sslOptions = {
   cert: null,
 };
 
+// remote command status
+var remoteCmdStatus = {};
+
 var labelFor = {};
 
 // App configuration
@@ -168,7 +171,11 @@ app.get('/macros/:macro.json', function (req, res) {
 });
 
 app.get('/remotes/:remote/:command', function (req, res) {
-  res.sendStatus(200);
+  if (remoteCmdStatus[req.params.remote] && remoteCmdStatus[req.params.remote][req.params.command] && remoteCmdStatus[req.params.remote][req.params.command] =="true" ) {
+    res.json({ "is_active" : "true" });
+  } else {
+    res.json({ "is_active" : "false" });
+  }
 });
 
 // Send :remote/:command one time
@@ -178,6 +185,18 @@ app.post('/remotes/:remote/:command', function (req, res) {
   }
   res.setHeader('Cache-Control', 'no-cache');
   res.sendStatus(200);
+  if ( remoteCmdStatus[req.params.remote] && remoteCmdStatus[req.params.remote][req.params.command] ) {
+    if ( remoteCmdStatus[req.params.remote][req.params.command] == "false" ) {
+      remoteCmdStatus[req.params.remote][req.params.command] = "true";
+    } else {
+      remoteCmdStatus[req.params.remote][req.params.command] = "false";
+    }
+  } else if ( remoteCmdStatus[req.params.remote] ) {
+    remoteCmdStatus[req.params.remote][req.params.command] = "true";
+  } else {
+    remoteCmdStatus[req.params.remote] = {};
+    remoteCmdStatus[req.params.remote][req.params.command] = "true";
+  }
 });
 
 // Start sending :remote/:command repeatedly
