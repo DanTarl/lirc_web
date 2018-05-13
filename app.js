@@ -12,6 +12,8 @@ var https = require('https');
 var fs = require('fs');
 var macros = require('./lib/macros');
 
+var PythonShell = require('python-shell');
+
 // Precompile templates
 var JST = {
   index: swig.compileFile(__dirname + '/templates/index.swig'),
@@ -23,6 +25,12 @@ var bootupTime = Date.now();
 
 // Create app
 var app = module.exports = express();
+
+var bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 // lirc_web configuration
 var config = {};
@@ -170,12 +178,45 @@ app.get('/macros/:macro.json', function (req, res) {
   }
 });
 
+app.get('/remotes/:remote/KEY_POWER2', function (req, res) {
+  PythonShell.run('ldr.py', function (err, results) {
+    if (err) throw err;
+    if (results[0] < 700000) {
+      res.json({ "is_active" : "true" });
+    } else {
+      res.json({ "is_active" : "false" });
+    }
+  });
+});
+
 app.get('/remotes/:remote/:command', function (req, res) {
   if (remoteCmdStatus[req.params.remote] && remoteCmdStatus[req.params.remote][req.params.command] && remoteCmdStatus[req.params.remote][req.params.command] =="true" ) {
     res.json({ "is_active" : "true" });
   } else {
     res.json({ "is_active" : "false" });
   }
+});
+
+app.post('/remotes/:remote/KEY_POWER2', function (req, res) {
+  PythonShell.run('ldr.py', function (err, results) {
+//    if (err) throw err;
+    console.log(results[0]);
+    if (req.body.active == "true") {
+      if (results[0] == 700000) {
+        console.log("Turning on");
+        for (i=0; i<3; i++) {
+          lircNode.irsend.send_once(req.params.remote, "KEY_POWER2", function () {});
+        }
+      }
+    } else if (results[0] < 700000) {
+      console.log("Turning off");
+      for (i=0; i<3; i++) {
+        lircNode.irsend.send_once(req.params.remote, "KEY_POWER2", function () {});
+      }
+    }
+  });
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendStatus(200);
 });
 
 // Send :remote/:command one time

@@ -5,12 +5,14 @@
   "version": "0.3.1",
   "preferGlobal": true,
   "dependencies": {
+    "body-parser": "^1.18.3",
     "compression": "^1.6.0",
     "consolidate": "^0.13.1",
     "express": "^4.13.0",
     "lirc_node": "0.0.4",
     "lodash": "^3.10.1",
     "morgan": "^1.6.1",
+    "python-shell": "^0.5.0",
     "swig": "^1.4.2"
   },
   "devDependencies": {
